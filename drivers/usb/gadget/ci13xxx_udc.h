@@ -152,6 +152,7 @@ struct ci13xxx_udc_driver {
 	bool (*cancel_pending_suspend)(struct ci13xxx *udc);
 	bool    (*in_lpm) (struct ci13xxx *udc);
 	void    (*set_fpr_flag) (struct ci13xxx *udc);
+	struct clk *pclk;
 };
 
 /* CI13XXX UDC descriptor & global resources */
@@ -180,6 +181,7 @@ struct ci13xxx {
 	int                        softconnect; /* is pull-up enable allowed */
 	unsigned long dTD_update_fail_count;
 	struct usb_phy            *transceiver; /* Transceiver struct */
+	struct clk                *pclk;
 	bool                      skip_flush; /* skip flushing remaining EP
 						upon flush timeout for the
 						first EP. */
