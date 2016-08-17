@@ -140,8 +140,10 @@ static int __replace_page(struct vm_area_struct *vma, unsigned long addr,
 	mmu_notifier_invalidate_range_start(mm, mmun_start, mmun_end);
 	err = -EAGAIN;
 	ptep = page_check_address(page, mm, addr, &ptl, 0);
-	if (!ptep)
+	if (!ptep) {
+		mem_cgroup_cancel_charge(kpage, memcg);
 		goto unlock;
+	}
 
 	get_page(kpage);
 	page_add_new_anon_rmap(kpage, vma, addr);
