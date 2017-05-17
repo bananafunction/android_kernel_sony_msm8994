@@ -2785,9 +2785,10 @@ irqreturn_t xhci_irq(struct usb_hcd *hcd)
 	u32 status;
 	u64 temp_64;
 	union xhci_trb *event_ring_deq;
+	unsigned long flags;
 	dma_addr_t deq;
 
-	spin_lock(&xhci->lock);
+	spin_lock_irqsave(&xhci->lock, flags);
 	/* Check if the xHC generated the interrupt, or the irq is shared */
 	status = xhci_readl(xhci, &xhci->op_regs->status);
 	if (status == 0xffffffff)
@@ -2860,7 +2861,7 @@ hw_died:
 	temp_64 |= ERST_EHB;
 	xhci_write_64(xhci, temp_64, &xhci->ir_set->erst_dequeue);
 
-	spin_unlock(&xhci->lock);
+	spin_unlock_irqrestore(&xhci->lock, flags);
 
 	return IRQ_HANDLED;
 }
