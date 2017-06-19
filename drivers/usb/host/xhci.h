@@ -1580,6 +1580,7 @@ struct xhci_hcd {
  * programming sequence of initiliazing the host controller from halted state.
  */
 #define XHCI_RESET_RS_ON_RESUME_QUIRK	(1 << 22)
+#define XHCI_U2_DISABLE_WAKE	(1 << 27)
 	unsigned int		num_active_eps;
 	unsigned int		limit_active_eps;
 	/* There are two roothubs to keep track of bus suspend info for */

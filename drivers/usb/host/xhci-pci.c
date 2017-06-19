@@ -34,6 +34,11 @@
 #define PCI_VENDOR_ID_ETRON		0x1b6f
 #define PCI_DEVICE_ID_ASROCK_P67	0x7023
 
+#define PCI_DEVICE_ID_AMD_PROMONTORYA_4			0x43b9
+#define PCI_DEVICE_ID_AMD_PROMONTORYA_3			0x43ba
+#define PCI_DEVICE_ID_AMD_PROMONTORYA_2			0x43bb
+#define PCI_DEVICE_ID_AMD_PROMONTORYA_1			0x43bc
+
 static const char hcd_name[] = "xhci_hcd";
 
 /* called after powerup, by probe or system-pm "wakeup" */
@@ -90,6 +95,13 @@ static void xhci_pci_quirks(struct device *dev, struct xhci_hcd *xhci)
 
 	if (pdev->vendor == PCI_VENDOR_ID_AMD)
 		xhci->quirks |= XHCI_TRUST_TX_LENGTH;
+
+	if ((pdev->vendor == PCI_VENDOR_ID_AMD) &&
+		((pdev->device == PCI_DEVICE_ID_AMD_PROMONTORYA_4) ||
+		(pdev->device == PCI_DEVICE_ID_AMD_PROMONTORYA_3) ||
+		(pdev->device == PCI_DEVICE_ID_AMD_PROMONTORYA_2) ||
+		(pdev->device == PCI_DEVICE_ID_AMD_PROMONTORYA_1)))
+		xhci->quirks |= XHCI_U2_DISABLE_WAKE;
 
 	if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
 		xhci->quirks |= XHCI_LPM_SUPPORT;
