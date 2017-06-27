@@ -5555,6 +5555,5 @@ int qce_hw_support(void *handle, struct ce_hw_support *ce_support)
 }
 EXPORT_SYMBOL(qce_hw_support);
 
-
 MODULE_LICENSE("GPL v2");
 MODULE_DESCRIPTION("Crypto Engine driver");
