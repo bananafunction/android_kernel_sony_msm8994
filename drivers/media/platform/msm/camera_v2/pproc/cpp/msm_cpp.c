@@ -2798,9 +2798,6 @@ STREAM_BUFF_END:
 		}
 		break;
 	}
-	default:
-		pr_err_ratelimited("invalid value: cmd=0x%x\n", cmd);
-		break;
 	case VIDIOC_MSM_CPP_IOMMU_ATTACH: {
 		if (cpp_dev->iommu_state == CPP_IOMMU_STATE_DETACHED) {
 			rc = iommu_attach_device(cpp_dev->domain,
@@ -2838,6 +2835,9 @@ STREAM_BUFF_END:
 		}
 		break;
 	}
+	default:
+		pr_err_ratelimited("invalid value: cmd=0x%x\n", cmd);
+		break;
 	}
 	mutex_unlock(&cpp_dev->mutex);
 	CPP_DBG("X\n");
