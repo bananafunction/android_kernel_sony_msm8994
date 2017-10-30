@@ -584,6 +584,7 @@ static int glink_pkt_mmap(struct file *file, struct vm_area_struct *vma)
 	struct glink_rx_pkt *pkt = NULL;
 	unsigned long pfn;
 	unsigned long size;
+	unsigned long flags;
 	void *data = NULL;
 
 	devp = file->private_data;
@@ -598,7 +599,7 @@ static int glink_pkt_mmap(struct file *file, struct vm_area_struct *vma)
 
 	GLINK_PKT_INFO("%s: on glink_pkt_dev id[%d]\n", __func__, devp->i);
 
-	if (list_empty(&devp->pkt_list)) {
+	if (!glink_pkt_read_avail(devp)) {
 		GLINK_PKT_ERR("%s: No Rx data on id[%d]\n", __func__, devp->i);
 		return -EAGAIN; /* No DATA */
 	}
@@ -610,6 +611,7 @@ static int glink_pkt_mmap(struct file *file, struct vm_area_struct *vma)
 	}
 	info->handle = devp->handle;
 
+	spin_lock_irqsave(&devp->pkt_list_lock, flags);
 	pkt = list_first_entry(&devp->pkt_list, struct glink_rx_pkt, list);
 	data = (void *)pkt->data;
 	info->buf = (void *)pkt->data;
@@ -617,6 +619,7 @@ static int glink_pkt_mmap(struct file *file, struct vm_area_struct *vma)
 	if ((pkt->size < PAGE_SIZE) && ((unsigned long)data & ~PAGE_MASK)) {
 		data = kzalloc(PAGE_SIZE, GFP_KERNEL);
 		if (!data) {
+			spin_unlock_irqrestore(&devp->pkt_list_lock, flags);
 			GLINK_PKT_ERR("%s: data Memory allocation failed\n",
 					__func__);
 			return -ENOMEM;
@@ -633,11 +636,13 @@ static int glink_pkt_mmap(struct file *file, struct vm_area_struct *vma)
 	vma->vm_ops = &glink_pkt_vm_ops;
 	if (remap_pfn_range(vma, vma->vm_start, pfn,
 			size, vma->vm_page_prot)) {
+		spin_unlock_irqrestore(&devp->pkt_list_lock, flags);
 		GLINK_PKT_ERR("%s: Remap failed\n", __func__);
 		return -EAGAIN;
 	}
 
 	list_del(&pkt->list);
+	spin_unlock_irqrestore(&devp->pkt_list_lock, flags);
 	kfree(pkt);
 	return 0;
 }
@@ -730,8 +735,7 @@ int glink_pkt_open(struct inode *inode, struct file *file)
 				devp->open_cfg.edge, devp->open_cfg.name);
 			ret = -ENODEV;
 		}
-		wakeup_source_init(&devp->pa_ws, devp->open_cfg.name);
-		INIT_WORK(&devp->packet_arrival_work, packet_arrival_worker);
+		wakeup_source_init(&devp->pa_ws, devp->dev_name);
 	}
 	devp->ref_cnt++;
 	mutex_unlock(&devp->ch_lock);
@@ -812,6 +816,7 @@ static int glink_pkt_init_add_device(struct glink_pkt_dev *devp, int i)
 	spin_lock_init(&devp->pa_spinlock);
 	INIT_LIST_HEAD(&devp->pkt_list);
 	spin_lock_init(&devp->pkt_list_lock);
+	INIT_WORK(&devp->packet_arrival_work, packet_arrival_worker);
 
 	cdev_init(&devp->cdev, &glink_pkt_fops);
 	devp->cdev.owner = THIS_MODULE;
