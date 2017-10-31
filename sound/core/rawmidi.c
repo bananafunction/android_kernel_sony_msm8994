@@ -959,9 +959,9 @@ static long snd_rawmidi_kernel_read1(struct snd_rawmidi_substream *substream,
 	struct snd_rawmidi_runtime *runtime = substream->runtime;
 	unsigned long appl_ptr;
 
-	spin_lock_irqsave(&runtime->lock, flags);
 	if (userbuf)
 		mutex_lock(&runtime->realloc_mutex);
+	spin_lock_irqsave(&runtime->lock, flags);
 	while (count > 0 && runtime->avail) {
 		count1 = runtime->buffer_size - runtime->appl_ptr;
 		if (count1 > count)
@@ -980,7 +980,7 @@ static long snd_rawmidi_kernel_read1(struct snd_rawmidi_substream *substream,
 		if (userbuf) {
 			spin_unlock_irqrestore(&runtime->lock, flags);
 			if (copy_to_user(userbuf + result,
-					 runtime->buffer + runtime->appl_ptr, count1)) {
+					 runtime->buffer + appl_ptr, count1)) {
 				mutex_unlock(&runtime->realloc_mutex);
 				return result > 0 ? result : -EFAULT;
 			}
@@ -992,7 +992,6 @@ static long snd_rawmidi_kernel_read1(struct snd_rawmidi_substream *substream,
 	if (userbuf)
 		mutex_unlock(&runtime->realloc_mutex);
 	spin_unlock_irqrestore(&runtime->lock, flags);
-
 	return result;
 }
 
