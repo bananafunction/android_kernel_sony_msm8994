@@ -196,6 +196,7 @@ static DEFINE_SPINLOCK(reg_spinlock);
 #define WCNSS_USR_WLAN_MAC_ADDR   (WCNSS_USR_CTRL_MSG_START + 3)
 
 #define MAC_ADDRESS_STR "%02x:%02x:%02x:%02x:%02x:%02x"
+#define WCNSS_USER_MAC_ADDR_LENGTH	18
 
 /* message types */
 #define WCNSS_CTRL_MSG_START	0x01000000
