@@ -474,6 +474,7 @@ int dwc3_core_init(struct dwc3 *dwc)
 		reg |= 0x8 << __ffs(DWC3_GUCTL_REFCLKPER);
 		dwc3_writel(dwc->regs, DWC3_GUCTL, reg);
 	}
+
 	/*
 	 * Currently, the default and the recommended value for GUSB3PIPECTL
 	 * [21:19] in the RTL is 3'b100 or 32 consecutive errors. Based on
@@ -492,7 +493,6 @@ int dwc3_core_init(struct dwc3 *dwc)
 	 * 3'b001. Perform the same in software for controllers prior to 2.30a
 	 * revision.
 	 */
-
 	if (dwc->revision < DWC3_REVISION_230A) {
 		reg = dwc3_readl(dwc->regs, DWC3_GUSB3PIPECTL(0));
 		reg &= ~DWC3_GUSB3PIPECTL_DELAY_P1P2P3;
@@ -504,6 +504,7 @@ int dwc3_core_init(struct dwc3 *dwc)
 		reg &= ~DWC3_GUSB3PIPECTL_DIS_RXDET_U3_RXDET;
 		dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
 	}
+
 	/*
 	 * clear Elastic buffer mode in GUSBPIPE_CTRL(0) register, otherwise
 	 * it results in high link errors and could cause SS mode transfer
@@ -513,6 +514,17 @@ int dwc3_core_init(struct dwc3 *dwc)
 		reg = dwc3_readl(dwc->regs, DWC3_GUSB3PIPECTL(0));
 		reg &= ~DWC3_GUSB3PIPECTL_ELASTIC_BUF_MODE;
 		dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(0), reg);
+	}
+
+	/*
+	 * Enable evicting endpoint cache after flow control for bulk
+	 * endpoints for dwc3 core version 3.00a and 3.20a
+	 */
+	if (dwc->revision == DWC3_REVISION_300A ||
+			dwc->revision == DWC3_REVISION_320A) {
+		reg = dwc3_readl(dwc->regs, DWC3_GUCTL2);
+		reg |= DWC3_GUCTL2_ENABLE_EP_CACHE_EVICT;
+		dwc3_writel(dwc->regs, DWC3_GUCTL2, reg);
 	}
 
 	return 0;
