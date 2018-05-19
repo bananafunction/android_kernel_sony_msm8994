@@ -203,6 +203,15 @@ int x509_note_signature(void *context, size_t hdrlen,
 		return -EINVAL;
 	}
 
+	if (ctx->cert->sig_pkey_algo == PKEY_ALGO_RSA) {
+		/* Discard the BIT STRING metadata */
+		if (vlen < 1 || *(const u8 *)value != 0)
+			return -EBADMSG;
+
+		value++;
+		vlen--;
+	}
+
 	ctx->cert->sig = value;
 	ctx->cert->sig_size = vlen;
 	return 0;
