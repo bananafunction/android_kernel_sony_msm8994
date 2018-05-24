@@ -1,7 +1,7 @@
 /*
  * Linux cfg80211 driver
  *
- * Copyright (C) 1999-2017, Broadcom Corporation
+ * Copyright (C) 1999-2018, Broadcom Corporation
  * Copyright (C) 2015 Sony Mobile Communications Inc.
  * 
  *      Unless you and Broadcom execute a separate written software license
@@ -22,7 +22,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: wl_cfg80211.c 718508 2017-08-31 02:48:38Z $
+ * $Id: wl_cfg80211.c 751081 2018-03-09 08:06:41Z $
  */
 /* */
 #include <typedefs.h>
@@ -8559,40 +8559,36 @@ static s32 wl_get_assoc_ies(struct bcm_cfg80211 *cfg, struct net_device *ndev)
 		bzero(conn_info->resp_ie, sizeof(conn_info->resp_ie));
 	}
 	if (assoc_info.req_len) {
-		err = wldev_iovar_getbuf(ndev, "assoc_req_ies", NULL, 0,
-				cfg->extra_buf, WL_ASSOC_INFO_MAX, NULL);
+		err = wldev_iovar_getbuf(ndev, "assoc_req_ies", NULL, 0, cfg->extra_buf,
+			assoc_info.req_len, NULL);
 		if (unlikely(err)) {
 			WL_ERR(("could not get assoc req (%d)\n", err));
 			goto exit;
 		}
-		conn_info->req_ie_len = assoc_info.req_len -
-			sizeof(struct dot11_assoc_req);
+		conn_info->req_ie_len = assoc_info.req_len - sizeof(struct dot11_assoc_req);
 		if (assoc_info.flags & WLC_ASSOC_REQ_IS_REASSOC) {
 			conn_info->req_ie_len -= ETHER_ADDR_LEN;
 		}
-		memcpy(conn_info->req_ie, cfg->extra_buf,
-			conn_info->req_ie_len);
+		memcpy(conn_info->req_ie, cfg->extra_buf, conn_info->req_ie_len);
 	}
-
 	if (assoc_info.resp_len) {
-		err = wldev_iovar_getbuf(ndev, "assoc_resp_ies", NULL, 0,
-				cfg->extra_buf, WL_ASSOC_INFO_MAX, NULL);
+		err = wldev_iovar_getbuf(ndev, "assoc_resp_ies", NULL, 0, cfg->extra_buf,
+			assoc_info.resp_len, NULL);
 		if (unlikely(err)) {
 			WL_ERR(("could not get assoc resp (%d)\n", err));
 			goto exit;
 		}
-		conn_info->resp_ie_len =
-			assoc_info.resp_len - sizeof(struct dot11_assoc_resp);
-		memcpy(conn_info->resp_ie, cfg->extra_buf,
-				conn_info->resp_ie_len);
+		conn_info->resp_ie_len = assoc_info.resp_len - sizeof(struct dot11_assoc_resp);
+		memcpy(conn_info->resp_ie, cfg->extra_buf, conn_info->resp_ie_len);
 	}
 
 exit:
 	if (err) {
-		WL_ERR(("err:%d assoc-req:%u,resp:%u conn-req:%u,resp:%u\n",
+		WL_ERR(("err:%d, assoc_info-req:%u,resp:%u conn_info-req:%u,resp:%u\n",
 			err, assoc_info.req_len, assoc_info.resp_len,
 			conn_info->req_ie_len, conn_info->resp_ie_len));
 	}
+
 	return err;
 }
 
