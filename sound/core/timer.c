@@ -65,6 +65,7 @@ struct snd_timer_user {
 	int qtail;
 	int qused;
 	int queue_size;
+	bool disconnected;
 	struct snd_timer_read *queue;
 	struct snd_timer_tread *tqueue;
 	spinlock_t qlock;
@@ -962,6 +963,7 @@ static int snd_timer_dev_register(struct snd_device *dev)
 static int snd_timer_dev_disconnect(struct snd_device *device)
 {
 	struct snd_timer *timer = device->device_data;
+	struct snd_timer_instance *ti;
 	mutex_lock(&register_mutex);
 	list_del_init(&timer->device_list);
 	/* wake up pending sleepers */
