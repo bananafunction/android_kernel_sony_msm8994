@@ -520,7 +520,6 @@ static int parse_cpu_levels(struct device_node *node, struct lpm_cluster *c)
 {
 	struct device_node *n;
 	int ret = -ENOMEM;
-	int i;
 
 	c->cpu = devm_kzalloc(&lpm_pdev->dev, sizeof(*c->cpu), GFP_KERNEL);
 	if (!c->cpu)
