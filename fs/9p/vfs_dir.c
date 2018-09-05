@@ -115,7 +115,6 @@ static int v9fs_dir_readdir(struct file *filp, void *dirent, filldir_t filldir)
 	int err = 0;
 	struct p9_fid *fid;
 	int buflen;
-	int reclen = 0;
 	struct p9_rdir *rdir;
 
 	p9_debug(P9_DEBUG_VFS, "name %s\n", filp->f_path.dentry->d_name.name);
@@ -141,12 +140,11 @@ static int v9fs_dir_readdir(struct file *filp, void *dirent, filldir_t filldir)
 			p9stat_init(&st);
 			err = p9stat_read(fid->clnt, rdir->buf + rdir->head,
 					  rdir->tail - rdir->head, &st);
-			if (err) {
+			if (err <= 0) {
 				p9_debug(P9_DEBUG_VFS, "returned %d\n", err);
 				p9stat_free(&st);
 				return -EIO;
 			}
-			reclen = st.size+2;
 
 			over = filldir(dirent, st.name, strlen(st.name),
 			    filp->f_pos, v9fs_qid2ino(&st.qid), dt_type(&st));
@@ -156,8 +154,8 @@ static int v9fs_dir_readdir(struct file *filp, void *dirent, filldir_t filldir)
 			if (over)
 				return 0;
 
-			rdir->head += reclen;
-			filp->f_pos += reclen;
+			rdir->head += err;
+			filp->f_pos += err;
 		}
 	}
 }
