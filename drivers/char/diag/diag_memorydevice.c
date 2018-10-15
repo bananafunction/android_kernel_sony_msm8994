@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014-2016, 2018, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -169,6 +169,7 @@ int diag_md_write(int id, unsigned char *buf, int len, int ctx)
 	}
 
 	found = 0;
+	mutex_lock(&driver->diagchar_mutex);
 	for (i = 0; i < driver->num_clients && !found; i++) {
 		if (driver->client_map[i].pid != driver->logging_process_id)
 			continue;
@@ -177,6 +178,7 @@ int diag_md_write(int id, unsigned char *buf, int len, int ctx)
 		pr_debug("diag: wake up logging process\n");
 		wake_up_interruptible(&driver->wait_q);
 	}
+	mutex_unlock(&driver->diagchar_mutex);
 
 	if (!found)
 		return -EINVAL;
