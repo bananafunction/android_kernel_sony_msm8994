@@ -125,6 +125,7 @@ static DEFINE_MUTEX(sd_ref_mutex);
 
 static struct kmem_cache *sd_cdb_cache;
 static mempool_t *sd_cdb_pool;
+static mempool_t *sd_page_pool;
 
 static const char *sd_cache_types[] = {
 	"write through", "none", "write back",
@@ -709,9 +710,10 @@ static int sd_setup_discard_cmnd(struct scsi_device *sdp, struct request *rq)
 
 	memset(rq->cmd, 0, rq->cmd_len);
 
-	page = alloc_page(GFP_ATOMIC | __GFP_ZERO);
+	page = mempool_alloc(sd_page_pool, GFP_ATOMIC);
 	if (!page)
 		return BLKPREP_DEFER;
+	clear_highpage(page);
 
 	switch (sdkp->provisioning_mode) {
 	case SD_LBP_UNMAP:
@@ -763,7 +765,7 @@ static int sd_setup_discard_cmnd(struct scsi_device *sdp, struct request *rq)
 
 out:
 	if (ret != BLKPREP_OK) {
-		__free_page(page);
+		mempool_free(page, sd_page_pool);
 		rq->buffer = NULL;
 	}
 	return ret;
@@ -3233,6 +3235,13 @@ static int __init init_sd(void)
 		goto err_out_cache;
 	}
 
+	sd_page_pool = mempool_create_page_pool(SD_MEMPOOL_SIZE, 0);
+	if (!sd_page_pool) {
+		printk(KERN_ERR "sd: can't init discard page pool\n");
+		err = -ENOMEM;
+		goto err_out_ppool;
+	}
+
 	err = scsi_register_driver(&sd_template.gendrv);
 	if (err)
 		goto err_out_driver;
@@ -3240,6 +3249,9 @@ static int __init init_sd(void)
 	return 0;
 
 err_out_driver:
+	mempool_destroy(sd_page_pool);
+
+err_out_ppool:
 	mempool_destroy(sd_cdb_pool);
 
 err_out_cache:
@@ -3266,6 +3278,7 @@ static void __exit exit_sd(void)
 
 	scsi_unregister_driver(&sd_template.gendrv);
 	mempool_destroy(sd_cdb_pool);
+	mempool_destroy(sd_page_pool);
 	kmem_cache_destroy(sd_cdb_cache);
 
 	class_unregister(&sd_disk_class);
