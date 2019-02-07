@@ -1595,9 +1595,9 @@ static int gfs2_rbm_find(struct gfs2_rbm *rbm, u8 state, u32 minext,
 			goto next_iter;
 		}
 		if (ret == -E2BIG) {
-			n += (rbm->bi - initial_bi);
 			index = 0;
 			rbm->offset = 0;
+			n += (rbm->bi - initial_bi);
 			goto res_covered_end_of_rgrp;
 		}
 		return ret;
