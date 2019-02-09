@@ -191,7 +191,9 @@ STORE(__cached_dev)
 	d_strtoul(writeback_rate_d_smooth);
 
 	d_strtoul(sequential_merge);
-	d_strtoi_h(sequential_cutoff);
+	sysfs_strtoul_clamp(sequential_cutoff,
+			    dc->sequential_cutoff,
+			    0, UINT_MAX);
 	d_strtoi_h(readahead);
 
 	if (attr == &sysfs_clear_stats)
