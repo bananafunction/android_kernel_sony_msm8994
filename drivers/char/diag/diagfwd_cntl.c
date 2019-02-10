@@ -453,6 +453,7 @@ static void diag_build_time_mask_update(uint8_t *buf,
 	build_mask = (struct diag_msg_mask_t *)(driver->build_time_mask->ptr);
 	num_items = range->ssid_last - range->ssid_first + 1;
 
+	mutex_lock(&driver->msg_mask_lock);
 	for (i = 0; i < driver->bt_msg_mask_tbl_count; i++, build_mask++) {
 		if (!build_mask) {
 			found = 1;
