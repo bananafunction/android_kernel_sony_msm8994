@@ -1160,6 +1160,19 @@ static inline void emac_disable_intr(struct emac_adapter *adpt)
 	synchronize_irq(adpt->irq[EMAC_SGMII_PHY_IRQ].irq);
 }
 
+/* Enable the interrupt mask */
+static inline void emac_enable_intr_mask(struct emac_adapter *adpt)
+{
+	int i;
+	for (i = 0; i < EMAC_NUM_CORE_IRQ; i++) {
+		adpt->irq[i].idx  = i;
+		adpt->irq[i].mask = emac_irq_cmn_tbl[i].init_mask;
+	}
+	adpt->irq[0].mask |= (msm_emac_intr_ext ? IMR_EXTENDED_MASK :
+			      IMR_NORMAL_MASK);
+}
+
+
 /* Configure VLAN tag strip/insert feature */
 static int emac_set_features(struct net_device *netdev,
 			     netdev_features_t features)
@@ -1660,6 +1673,7 @@ int emac_up(struct emac_adapter *adpt)
 		emac_refresh_rx_buffer(&adpt->rx_queue[i]);
 
 	emac_napi_enable_all(adpt);
+	emac_enable_intr_mask(adpt);
 	emac_enable_intr(adpt);
 
 	netif_start_queue(netdev);
@@ -2713,12 +2727,7 @@ static int emac_probe(struct platform_device *pdev)
 	dma_set_max_seg_size(&pdev->dev, 65536);
 	dma_set_seg_boundary(&pdev->dev, 0xffffffff);
 
-	for (i = 0; i < EMAC_NUM_CORE_IRQ; i++) {
-		adpt->irq[i].idx  = i;
-		adpt->irq[i].mask = emac_irq_cmn_tbl[i].init_mask;
-	}
-	adpt->irq[0].mask |= (msm_emac_intr_ext ? IMR_EXTENDED_MASK :
-			      IMR_NORMAL_MASK);
+	emac_enable_intr_mask(adpt);
 
 	retval = emac_get_resources(pdev, adpt);
 	if (retval)
