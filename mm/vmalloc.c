@@ -2276,7 +2276,7 @@ int remap_vmalloc_range(struct vm_area_struct *vma, void *addr,
 	if (!(area->flags & VM_USERMAP))
 		return -EINVAL;
 
-	if (usize + (pgoff << PAGE_SHIFT) > area->size - PAGE_SIZE)
+	if (usize + (pgoff << PAGE_SHIFT) > get_vm_area_size(area) - PAGE_SIZE)
 		return -EINVAL;
 
 	addr += pgoff << PAGE_SHIFT;
