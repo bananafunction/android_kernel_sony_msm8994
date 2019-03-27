@@ -403,13 +403,13 @@ TRACE_EVENT(kvm_apic_ipi,
 );
 
 TRACE_EVENT(kvm_apic_accept_irq,
-	    TP_PROTO(__u32 apicid, __u16 dm, __u8 tm, __u8 vec, bool coalesced),
+	    TP_PROTO(__u32 apicid, __u16 dm, __u16 tm, __u8 vec, bool coalesced),
 	    TP_ARGS(apicid, dm, tm, vec, coalesced),
 
 	TP_STRUCT__entry(
 		__field(	__u32,		apicid		)
 		__field(	__u16,		dm		)
-		__field(	__u8,		tm		)
+		__field(	__u16,		tm		)
 		__field(	__u8,		vec		)
 		__field(	bool,		coalesced	)
 	),
