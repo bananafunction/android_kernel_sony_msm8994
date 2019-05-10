@@ -354,12 +354,13 @@ int br_add_if(struct net_bridge *br, struct net_device *dev)
 
 	err = dev_set_promiscuity(dev, 1);
 	if (err)
-		goto put_back;
+		kfree(p);	/* kobject not yet init'd, manually free */
+		goto err1;
 
 	err = kobject_init_and_add(&p->kobj, &brport_ktype, &(dev->dev.kobj),
 				   SYSFS_BRIDGE_PORT_ATTR);
 	if (err)
-		goto err1;
+		goto err2;
 
 	err = br_sysfs_addif(p);
 	if (err)
@@ -417,12 +418,9 @@ err3:
 	sysfs_remove_link(br->ifobj, p->dev->name);
 err2:
 	kobject_put(&p->kobj);
-	p = NULL; /* kobject_put frees */
-err1:
 	dev_set_promiscuity(dev, -1);
-put_back:
+err1:
 	dev_put(dev);
-	kfree(p);
 	return err;
 }
 
